@@ -1,0 +1,82 @@
+spring:
+  application:
+    name: mqtt-broker
+
+mqtt:
+  enabled: true # MQTT broker is enabled or not, false-OFF, true-ON
+  broker:
+    host: 0.0.0.0
+    port: 1883
+    boss-threads: 1 # 2 x available CPU cores
+    worker-threads: 8 # 8 x available boss-threads
+
+  security:
+    tls:
+      enabled: false # TLS integration is enabled or not, false-OFF, true-ON
+      server-cert: certs/server/server.crt
+      server-key: certs/server/server.key
+      device-ca: certs/device/device-ca.crt
+    challenge:
+      enabled: false # challenge integration is enabled or not, false-OFF, true-ON
+      load-dummy-challenges: true # load dummy challenges for testing, false-OFF, true-ON
+    whitelisting:
+      enabled: false # Whitelisting is enabled or not, false-OFF, true-ON
+      allowed-topics: [ "system/challenge","/temperature" ] # full name topics
+      allowed-devices: [ "device-001","device-002" ] # device ids
+
+kafka:
+  enabled: false # kafka integration is enabled or not, false-OFF, true-ON
+  bootstrap-servers: "localhost:9092"
+  client-id: "mqtt-kafka-app"
+  properties:
+    security-protocol: "SASL_SSL"
+    sasl-mechanism: "PLAIN"
+    sasl-jaas-config: "org.apache.kafka.common.security.plain.PlainLoginModule required username='user' 
+    password='pass';"
+  topics:
+    confirmed-mqtt-messages:
+      name: "confirmed-mqtt-messages"
+      producer:
+        enabled: false
+        key-serializer: org.apache.kafka.common.serialization.StringSerializer
+        value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+        acks: all
+        retries: 3
+
+cache:
+  in-memory:
+    enabled: true # in-memory cache enabled or not, false-OFF, true-ON
+
+  off-memory:
+    enabled: false # standalone redis cache enabled or not, false-OFF, true-ON
+    redis:
+      standalone:
+        enabled: false
+        host: 127.0.0.1
+        port: 6379
+      cluster:
+        enabled: false # clustered redis cache enabled or not, false-OFF, true-ON
+        nodes: 10.0.0.1:6379, 10.0.0.2:6379, 10.0.0.3:6379
+        max-redirects: 3
+      retry:
+        connection-failure: 3
+        connection-timeout: 500ms # format ms, s, m, h, d
+        data-failure: 3
+        data-timeout: 500ms # format ms, s, m, h, d
+  namespaces: # common namespaces for both type of caches
+    challenge-store: # challenge tracking
+      key-ttl: 24h # format ms, s, m, h, d
+      max-cache-size: 1000 # maximum number of keys
+    challenge-status: # challenge tracking
+      key-ttl: 24h # format ms, s, m, h, d
+      max-cache-size: 1000 # maximum number of keys
+    qos1-message: # Tracking QoS-1 of message
+      key-ttl: 10m # format ms, s, m, h, d
+      max-cache-size: 1000 # maximum number of keys
+    qos2-message: # Tracking QoS-2 of message
+      key-ttl: 10m # format ms, s, m, h, d
+      max-cache-size: 1000 # maximum number of keys
+
+
+
+
